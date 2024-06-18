@@ -27,10 +27,11 @@ Route::get('/tasks', function () {
     return view('index', ['tasks' => Task::latest()->get()]); // no need to write full path index.blade.php
 })->name('tasks.index');
 
+// ROUTE TO GET THE CREATE TASK PAGE
 // order of routes matter, such a route comes before routes that get a param, else errors
 // express equivalent: router.get("/stats", showStats); placed before router.get("/:id", validateIdParam, getJob); - to avoid param errors in connection to :id as express reads from top to bottom
 // in PHP vanilla: switch ($action) { case 'login':  include '../view/login.php'; break;
-Route::view('tasks/create', 'create')->name('tasks.create'); 
+Route::view('/tasks/create', 'create')->name('tasks.create'); 
 
 // GET A SINGLE TASK ROUTE
 // express equivalent: router.get("/:id", getJob);
@@ -43,14 +44,29 @@ Route::get('tasks/{task}', function(Task $task) {
 
 // CREATE A SINGLE TASK
 // express equivalent: const createJob = async (req, res) => {const job = await Job.create(req.body);}
-Route::post('tasks', function(TaskRequest $request) { //function(Request $request) - default
+Route::post('/tasks', function(TaskRequest $request) { //function(Request $request) - default
     // dd('route reached'); // dd() dump and die function
     // dd($request->all()); // displays all the incoming data
 
     // Get and Validate Incoming form data (which is stored as array from the form)
+    // and create a new task using a model, all at the same time. $request->validated()
+    // brings in validated data to use in the creation of the new task
+    // express equivalent: const job = await Job.create(req.body);
+    $task = Task::create($request->validated());
+
+    // Redirect the user with a success or failure message - redirect to a page that shows
+    // the newly created job, hence redirect while passing the id of the newly created task
+    return redirect()->route('tasks.show', ['task' => $task->id])
+    ->with('success', 'Task Created Successfully');
+    // with(); -- Creates a flash  session message indicating an operation success, this
+    // message is removed after being used when displayed to the user.
+    // Express equivalent:  <Link to={`../view-job/${_id}`}>Job name<Link />
+
+    // Other approach
+    // Get and Validate Incoming form data (which is stored as array from the form)
     // TaskRequest extends Request class and adds validation rules, hence once used, the
     // validation rules apply to the incoming form data
-    $incomingFormData = $request->validated(); // validates data using code in TaskRequest class
+    // $incomingFormData = $request->validated(); // validates data using code in TaskRequest class
     // code above is run instead of running code below in every controller to validate
     // incoming data
 
@@ -61,52 +77,48 @@ Route::post('tasks', function(TaskRequest $request) { //function(Request $reques
     // ]);
 
     // Create a new task using the incoming validated form data
-    $task = new Task();
-    $task->title = $incomingFormData['title'];
-    $task->description = $incomingFormData['description'];
-    $task->long_description = $incomingFormData['long_description'];
+    // $task = new Task();
+    // $task->title = $incomingFormData['title'];
+    // $task->description = $incomingFormData['description'];
+    // $task->long_description = $incomingFormData['long_description'];
 
-    // Save changes to the database/adds new task to the database
-    $task->save();
+     // Save changes to the database/adds new task to the database
+    // $task->save();
 
-    // Redirect the user with a success or failure message - redirect to a page that shows
-    // the newly created job, hence redirect while passing the id of the newly created task
-    return redirect()->route('tasks.show', ['id' => $task->id])
-    ->with('success', 'Task Created Successfully');
-    // with(); -- Creates a flash  session message indicating an operation success, this
-    // message is removed after being used when displayed to the user.
-    // Express equivalent:  <Link to={`../view-job/${_id}`}>Job name<Link />
 
 })->name('tasks.store');
 
 // GET A SINGLE TASK TO EDIT ROUTE
 // express equivalent: router.get("/:id", getJob); -- /edit not used in express
 // route-model binding(searching db data using arguments): {task} still holds the passed id
-Route::get('tasks/{task}/edit', function(Task $task) { 
+Route::get('/tasks/{task}/edit', function(Task $task) { 
     return view('edit', ['task' => $task]);
 })->name('tasks.edit');
 
 // OTHER APPROACH OF ROUTER ABOVE
-Route::get('tasks/{id}/edit', function($id) { 
+Route::get('/tasks/{id}/edit', function($id) { 
     return view('edit', ['task'=> Task::findOrFail($id)]);
 })->name('tasks.edit');
 
 
 // EDIT A SINGLE TASK
-// express equivalent: const updatedJob = await Job.findByIdAndUpdate(id, req.body, { new: true });
-Route::put('tasks/{task}', function(Task $task, TaskRequest $request) { 
+Route::put('/tasks/{task}', function(Task $task, TaskRequest $request) { 
     // Update the task using the incoming validated form data
-    $incomingFormData = $request->validated(); // validates data using code in TaskRequest class
-    $task->title = $incomingFormData['title'];
-    $task->description = $incomingFormData['description'];
-    $task->long_description = $incomingFormData['long_description'];
+    // express equivalent: const updatedJob = await Job.findByIdAndUpdate(id, req.body, { new: true });
+    $task->update($request->validated());
+
+    // Other approach
+    // $incomingFormData = $request->validated(); // validates data using code in TaskRequest class
+    // $task->title = $incomingFormData['title'];
+    // $task->description = $incomingFormData['description'];
+    // $task->long_description = $incomingFormData['long_description'];
 
     // Save changes to the database/adds new task to the database
-    $task->save();
+    // $task->save();
 
     // Redirect the user with a success or failure message - redirect to a page that shows
     // the newly created job, hence redirect while passing the id of the newly created task
-    return redirect()->route('tasks.show', ['id' => $task->id])
+    return redirect()->route('tasks.show', ['task' => $task->id])
     ->with('success', 'Task updated Successfully');
     // with(); -- Creates a flash  session message indicating an operation success, this
     // message is removed after being used when displayed to the user.
@@ -115,6 +127,12 @@ Route::put('tasks/{task}', function(Task $task, TaskRequest $request) {
 })->name('tasks.update');
 
 
+// DELETE A SINGLE TASK
+Route::delete('/tasks/{task}', function(Task $task) {
+    $task->delete();
+    return redirect()->route('tasks.index')->with('success', 'Task Deleted Successfully!');
+    // IF TASK NOT FOUND LARAVEL REDIRECTS TO A 404 PAGE
+})->name('tasks.destroy');
 
 
 // OTHER ROUTES
