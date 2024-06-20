@@ -12,4 +12,12 @@ class Task extends Model
     // protected $guarded = ['password']; stops column to be used in mass assignment
     // protected $fillable =[] is used to enable this mass assignment, columns to be used 
     // in the mass assignment are put inside the array as strings
+
+    public function toggleComplete() {
+        $this->completed = !$this->completed;
+        $this->save();
+        // SAME AS CODE BELOW WHEN USED IN THE CONTROLLER
+        // $task->completed = !$task->completed;
+        // $task->save();
+    }
 }

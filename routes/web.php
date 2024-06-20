@@ -20,11 +20,9 @@ Route::get('/', function () {
 });
 
 // BASE ROUTE - GETS ALL TASKS
+// paginate() paginates data from the database - groups it to be accessed in various pages
 Route::get('/tasks', function () {
-    // Second argument of view is used to pass values/arguments to the view page 
-    // 'tasks' is the variable name being passed and '$tasks is its value
-    // Can not passed html as value, the syntax will be escaped and passed as text
-    return view('index', ['tasks' => Task::latest()->get()]); // no need to write full path index.blade.php
+    return view('index', ['tasks' => Task::latest()->paginate(12)]);
 })->name('tasks.index');
 
 // ROUTE TO GET THE CREATE TASK PAGE
@@ -96,9 +94,9 @@ Route::get('/tasks/{task}/edit', function(Task $task) {
 })->name('tasks.edit');
 
 // OTHER APPROACH OF ROUTER ABOVE
-Route::get('/tasks/{id}/edit', function($id) { 
-    return view('edit', ['task'=> Task::findOrFail($id)]);
-})->name('tasks.edit');
+// Route::get('/tasks/{id}/edit', function($id) { 
+//     return view('edit', ['task'=> Task::findOrFail($id)]);
+// })->name('tasks.edit');
 
 
 // EDIT A SINGLE TASK
@@ -133,6 +131,29 @@ Route::delete('/tasks/{task}', function(Task $task) {
     return redirect()->route('tasks.index')->with('success', 'Task Deleted Successfully!');
     // IF TASK NOT FOUND LARAVEL REDIRECTS TO A 404 PAGE
 })->name('tasks.destroy');
+
+// ROUTE TO TOGGLE COMPLETE TASK
+Route::put('tasks/{task}/toggle-complete', function(Task $task) {
+    $task->toggleComplete();
+    return redirect()->back()->with('success', 'Task Updated Successfully!');
+
+    // OTHER APPROACH 2 (WITHOUT USING THE MODEL FUNCTION THAT TOGGLES THE TASK COMPLETED COLUMN)
+    // $task->completed = !$task->completed;
+    // $task->save();
+    // return redirect()->back()->with('success', 'Task Updated Successfully!');
+    // back() takes back(remains) to the same back
+
+    // OTHER APPROACH 3
+    // if($task->completed == false) {
+    //     $task->completed = true;
+    // }
+    // else {
+    //     $task->completed = false;
+    // }
+    // $task->save();
+
+    // return redirect()->back()->with('success', 'Task Updated Successfully!');
+})->name('tasks.toggle-complete');
 
 
 // OTHER ROUTES
