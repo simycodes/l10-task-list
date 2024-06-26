@@ -18,7 +18,7 @@
 
 @section('content')
     <div class="mb-4">
-        <a href="{{ route('tasks.index') }}" class="font-medium text-grey-700 underline decoration-pink-500">
+        <a href="{{ route('tasks.index') }}" class="link">
             <- All Tasks List
         </a>
     </div>
@@ -39,25 +39,23 @@
         @endif
     </p>
 
-    <div> 
-        <a href="{{ route('tasks.edit', ['task'=> $task->id]) }}">Edit Job</a>
-    </div>
-        
-    <div>
+    <div class="flex gap-2"> 
+        <a href="{{ route('tasks.edit', ['task'=> $task->id]) }}" class="btn">
+            Edit Job
+        </a>
+    
         <form method="POST" action="{{ route('tasks.toggle-complete', ['task' => $task->id]) }}">
             @csrf
             @method('PUT')
-            <button type="submit">
+            <button type="submit" class="btn">
                 Mark as: {{ $task->completed? 'not completed' : 'completed' }}
             </button>
         </form>
-    </div>
-
-    <div>
+    
         <form action="{{ route('tasks.destroy', ['task' => $task->id])}}" method="POST">
             @csrf
             @method('DELETE')
-            <button type="submit">Delete Task</button>
+            <button type="submit" class="btn">Delete Task</button>
         </form>
     </div>
     
